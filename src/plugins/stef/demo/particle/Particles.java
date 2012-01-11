@@ -7,12 +7,11 @@ import icy.canvas.IcyCanvas;
 import icy.image.IcyBufferedImage;
 import icy.math.FPSMeter;
 import icy.painter.AbstractPainter;
-import icy.plugin.abstract_.Plugin;
-import icy.plugin.interface_.PluginImageAnalysis;
+import icy.plugin.abstract_.PluginActionable;
 import icy.sequence.Sequence;
 import icy.sequence.SequenceEvent;
 import icy.sequence.SequenceListener;
-import icy.type.TypeUtil;
+import icy.type.DataType;
 import icy.util.EventUtil;
 
 import java.awt.Color;
@@ -30,7 +29,7 @@ import java.util.Random;
  * 
  * @author Stephane
  */
-public class Particles extends Plugin implements PluginImageAnalysis
+public class Particles extends PluginActionable
 {
     private static final int IMAGE_WIDTH = 640;
     private static final int IMAGE_HEIGTH = 480;
@@ -120,14 +119,11 @@ public class Particles extends Plugin implements PluginImageAnalysis
 
             if (fastDraw)
                 g2.drawImage(bufImage, 0, 0, null);
-
-            if (displayToolTip)
-            {
-                g2.setColor(Color.darkGray);
-                g2.drawString("Maintain left mouse button to add new particles", 11, 21);
-                g2.setColor(Color.white);
-                g2.drawString("Maintain left mouse button to add new particles", 10, 20);
-            }
+            
+            g2.setColor(Color.darkGray);
+            g2.drawString(fpsMessage, 11, 21);
+            g2.setColor(Color.white);
+            g2.drawString(fpsMessage, 10, 20);
 
             if (fastDraw)
             {
@@ -148,6 +144,16 @@ public class Particles extends Plugin implements PluginImageAnalysis
             g2.drawString("Maintain ALT key for normal canvas operation on mouse drag", 11, 61);
             g2.setColor(Color.white);
             g2.drawString("Maintain ALT key for normal canvas operation on mouse drag", 10, 60);
+            
+            if (displayToolTip)
+            {
+                g2.setColor(Color.darkGray);
+                g2.drawString("Maintain left mouse button to add new particles", 11, 81);
+                g2.setColor(Color.white);
+                g2.drawString("Maintain left mouse button to add new particles", 10, 80);
+            }
+
+
 
             g2.dispose();
         }
@@ -164,6 +170,7 @@ public class Particles extends Plugin implements PluginImageAnalysis
 
     private final Random random;
     private final FPSMeter fpsMeter;
+    String fpsMessage;
     private final ParticlePainter painter;
     Sequence sequence;
 
@@ -181,12 +188,13 @@ public class Particles extends Plugin implements PluginImageAnalysis
         super();
 
         // create our image & our back buffer
-        icyImage = new IcyBufferedImage(IMAGE_WIDTH, IMAGE_HEIGTH, 1, TypeUtil.TYPE_BYTE);
+        icyImage = new IcyBufferedImage(IMAGE_WIDTH, IMAGE_HEIGTH, 1, DataType.UBYTE);
         bufImage = new BufferedImage(IMAGE_WIDTH, IMAGE_HEIGTH, BufferedImage.TYPE_BYTE_GRAY);
         buffer = new byte[IMAGE_HEIGTH * IMAGE_WIDTH];
 
         random = new Random();
         fpsMeter = new FPSMeter();
+        fpsMessage = "";
 
         // source init
         sourceX = IMAGE_WIDTH / 2f;
@@ -209,7 +217,7 @@ public class Particles extends Plugin implements PluginImageAnalysis
         painter = new ParticlePainter();
 
         // create sequence
-        sequence = new Sequence(icyImage);
+        sequence = new Sequence("Particle animation", icyImage);
         // add our painter
         sequence.addPainter(painter);
         // add listener
@@ -238,29 +246,6 @@ public class Particles extends Plugin implements PluginImageAnalysis
         // process can start
         terminated = false;
         fastDraw = true;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see icy.plugin.interface_.PluginImageAnalysis#compute()
-     */
-    @Override
-    public void compute()
-    {
-        // start processing in a external thread (don't lock AWT)
-        final Thread t = new Thread(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                process();
-            }
-        });
-
-        // set priority to minimum so image refresh is done in time
-        t.setPriority(Thread.MIN_PRIORITY);
-        t.start();
     }
 
     private void initPartic(Particle partic)
@@ -372,8 +357,7 @@ public class Particles extends Plugin implements PluginImageAnalysis
 
     private void updateFPSCounter(int numPartic)
     {
-        if (sequence != null)
-            sequence.setName(fpsMeter.update() + " simulated frames per second -   " + numPartic + " particules");
+        fpsMessage = fpsMeter.update() + " simulated frames per second -   " + numPartic + " particules";
     }
 
     void scanCommand()
@@ -406,6 +390,9 @@ public class Particles extends Plugin implements PluginImageAnalysis
 
         displayToolTip = (activePart != NUM_PARTICLE);
 
+        // update FPS
+        updateFPSCounter(activePart);
+
         if (fastDraw)
         {
             // copy data to the buffered image
@@ -417,8 +404,23 @@ public class Particles extends Plugin implements PluginImageAnalysis
         else
             // copy data to image (this automatically cause a repaint)
             icyImage.setDataXYAsByte(0, buffer);
+    }
 
-        // update FPS
-        updateFPSCounter(activePart);
+    @Override
+    public void run()
+    {
+        // start processing in a external thread (don't lock AWT)
+        final Thread t = new Thread(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                process();
+            }
+        });
+
+        // set priority to minimum so image refresh is done in time
+        t.setPriority(Thread.MIN_PRIORITY);
+        t.start();
     }
 }
