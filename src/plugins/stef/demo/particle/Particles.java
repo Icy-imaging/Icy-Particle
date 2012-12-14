@@ -3,6 +3,7 @@
  */
 package plugins.stef.demo.particle;
 
+import icy.canvas.Canvas3D;
 import icy.canvas.IcyCanvas;
 import icy.image.IcyBufferedImage;
 import icy.math.FPSMeter;
@@ -113,49 +114,54 @@ public class Particles extends PluginActionable
         @Override
         public void paint(Graphics2D g, Sequence sequence, IcyCanvas canvas)
         {
-            super.paint(g, sequence, canvas);
-
-            final Graphics2D g2 = (Graphics2D) g.create();
-
-            if (fastDraw)
-                g2.drawImage(bufImage, 0, 0, null);
-            
-            g2.setColor(Color.darkGray);
-            g2.drawString(fpsMessage, 11, 21);
-            g2.setColor(Color.white);
-            g2.drawString(fpsMessage, 10, 20);
-
-            if (fastDraw)
+            if (canvas instanceof Canvas3D)
             {
-                g2.setColor(Color.darkGray);
-                g2.drawString("Use SPACE key to switch to normal image draw (LUT support)", 11, 41);
-                g2.setColor(Color.white);
-                g2.drawString("Use SPACE key to switch to normal image draw (LUT support)", 10, 40);
-            }
-            else
-            {
-                g2.setColor(Color.darkGray);
-                g2.drawString("Use SPACE key to switch to fast painter draw mode (no LUT support)", 11, 41);
-                g2.setColor(Color.white);
-                g2.drawString("Use SPACE key to switch to fast painter draw mode (no LUT support)", 10, 40);
+                System.out.println("Particles do no support Canvas3D :");
+                return;
             }
 
-            g2.setColor(Color.darkGray);
-            g2.drawString("Maintain ALT key for normal canvas operation on mouse drag", 11, 61);
-            g2.setColor(Color.white);
-            g2.drawString("Maintain ALT key for normal canvas operation on mouse drag", 10, 60);
-            
-            if (displayToolTip)
+            if (g != null)
             {
+                final Graphics2D g2 = (Graphics2D) g.create();
+
+                if (fastDraw)
+                    g2.drawImage(bufImage, 0, 0, null);
+
                 g2.setColor(Color.darkGray);
-                g2.drawString("Maintain left mouse button to add new particles", 11, 81);
+                g2.drawString(fpsMessage, 11, 21);
                 g2.setColor(Color.white);
-                g2.drawString("Maintain left mouse button to add new particles", 10, 80);
+                g2.drawString(fpsMessage, 10, 20);
+
+                if (fastDraw)
+                {
+                    g2.setColor(Color.darkGray);
+                    g2.drawString("Use SPACE key to switch to normal image draw (LUT support)", 11, 41);
+                    g2.setColor(Color.white);
+                    g2.drawString("Use SPACE key to switch to normal image draw (LUT support)", 10, 40);
+                }
+                else
+                {
+                    g2.setColor(Color.darkGray);
+                    g2.drawString("Use SPACE key to switch to fast painter draw mode (no LUT support)", 11, 41);
+                    g2.setColor(Color.white);
+                    g2.drawString("Use SPACE key to switch to fast painter draw mode (no LUT support)", 10, 40);
+                }
+
+                g2.setColor(Color.darkGray);
+                g2.drawString("Maintain ALT key for normal canvas operation on mouse drag", 11, 61);
+                g2.setColor(Color.white);
+                g2.drawString("Maintain ALT key for normal canvas operation on mouse drag", 10, 60);
+
+                if (displayToolTip)
+                {
+                    g2.setColor(Color.darkGray);
+                    g2.drawString("Maintain left mouse button to add new particles", 11, 81);
+                    g2.setColor(Color.white);
+                    g2.drawString("Maintain left mouse button to add new particles", 10, 80);
+                }
+
+                g2.dispose();
             }
-
-
-
-            g2.dispose();
         }
     }
 
