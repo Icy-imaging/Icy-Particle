@@ -269,7 +269,7 @@ public class Particles extends PluginActionable
         partic.active = true;
     }
 
-    void animPartic(Particle partic)
+    boolean animPartic(Particle partic)
     {
         // movement
         partic.positionX += partic.moveX;
@@ -292,10 +292,14 @@ public class Particles extends PluginActionable
                 partic.moveX += fDistX / fForce;
                 partic.moveY += fDistY / fForce;
             }
+            
+            return true;
         }
+        
+        return false;
     }
 
-    boolean checkPartic(Particle partic)
+    static boolean checkPartic(Particle partic)
     {
         // check bounds
         return (partic.positionX >= 0f) && (partic.positionY >= 0f) && (partic.positionX < IMAGE_WIDTH)
@@ -375,22 +379,24 @@ public class Particles extends PluginActionable
 
     void updateFrame()
     {
-        // animate
-        for (Particle partic : particles)
-            if (partic.active)
-                animPartic(partic);
-
         // clear
         Arrays.fill(buffer, (byte) 0);
 
-        // draw partics
+        final int len = particles.length;
+
+        // animate & draw
         int activePart = 0;
-        for (Particle partic : particles)
+        for (int p = 0; p < len; p++)
         {
+            final Particle partic = particles[p];
+
             if (partic.active)
             {
-                drawPartic(partic);
-                activePart++;
+                if (animPartic(partic))
+                {
+                    drawPartic(partic);
+                    activePart++;
+                }
             }
         }
 
