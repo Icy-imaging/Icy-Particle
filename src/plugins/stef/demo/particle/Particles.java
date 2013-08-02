@@ -7,7 +7,7 @@ import icy.canvas.Canvas3D;
 import icy.canvas.IcyCanvas;
 import icy.image.IcyBufferedImage;
 import icy.math.FPSMeter;
-import icy.painter.AbstractPainter;
+import icy.painter.Overlay;
 import icy.plugin.abstract_.PluginActionable;
 import icy.sequence.Sequence;
 import icy.sequence.SequenceEvent;
@@ -43,11 +43,11 @@ public class Particles extends PluginActionable
      * 
      * @author Stephane
      */
-    private class ParticlePainter extends AbstractPainter
+    private class ParticleOverlay extends Overlay
     {
-        public ParticlePainter()
+        public ParticleOverlay()
         {
-            super();
+            super("Particles");
         }
 
         @Override
@@ -177,7 +177,7 @@ public class Particles extends PluginActionable
     private final Random random;
     private final FPSMeter fpsMeter;
     String fpsMessage;
-    private final ParticlePainter painter;
+    private final ParticleOverlay overlay;
     Sequence sequence;
 
     float sourceX;
@@ -220,12 +220,12 @@ public class Particles extends PluginActionable
         }
 
         // create our painter
-        painter = new ParticlePainter();
+        overlay = new ParticleOverlay();
 
         // create sequence
         sequence = new Sequence("Particle animation", icyImage);
-        // add our painter
-        sequence.addPainter(painter);
+        // add our overlay
+        sequence.addOverlay(overlay);
         // add listener
         sequence.addListener(new SequenceListener()
         {
@@ -292,10 +292,10 @@ public class Particles extends PluginActionable
                 partic.moveX += fDistX / fForce;
                 partic.moveY += fDistY / fForce;
             }
-            
+
             return true;
         }
-        
+
         return false;
     }
 
@@ -410,8 +410,8 @@ public class Particles extends PluginActionable
             // copy data to the buffered image
             System.arraycopy(buffer, 0, ((DataBufferByte) bufImage.getRaster().getDataBuffer()).getData(), 0,
                     buffer.length);
-            // notify painter has changed
-            painter.changed();
+            // notify that overlay need to be redraw
+            overlay.painterChanged();
         }
         else
             // copy data to image (this automatically cause a repaint)
